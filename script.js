@@ -1,14 +1,20 @@
 import { html, render } from "https://cdn.jsdelivr.net/npm/lit-html@3/+esm";
+import { unsafeHTML } from "https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js";
+import { Marked } from "https://cdn.jsdelivr.net/npm/marked@13/+esm";
 import { read, utils } from "https://cdn.jsdelivr.net/npm/xlsx/+esm";
 import {
   Chart,
+  Colors,
   BarController,
   BarElement,
   CategoryScale,
   LinearScale,
   Tooltip,
 } from "https://cdn.jsdelivr.net/npm/chart.js@4/+esm";
+import { asyncSSE } from "https://cdn.jsdelivr.net/npm/asyncsse@1";
 
+let llmContent;
+const marked = new Marked();
 const { token } = await fetch("https://llmfoundry.straive.com/token", { credentials: "include" }).then((r) => r.json());
 if (!token) {
   const url = "https://llmfoundry.straive.com/login?" + new URLSearchParams({ next: location.href });
@@ -161,7 +167,16 @@ const vaptReport = ({ Summary, ...data }) => html`
     <canvas id="session-usage"></canvas>
 
     <h1 class="display-4 my-4 border-bottom border-dark pb-2">Recommended Actions</h1>
-    <div id="recommendations"></div>
+
+    <form id="recommendations-form">
+      <div class="mb-3">
+        <label for="recommendations-prompt" class="form-label">Re-generate AI summary</label>
+        <input type="text" class="form-control" id="recommendations-prompt" placeholder="Enter a prompt to generate recommendations" value="Using provided data, generate recommendations to improve VAPT score. Group into logical sections. Provide specific reasons for recommendations from data.">
+      </div>
+      <button type="submit" class="btn btn-primary">Generate</button>
+    </form>
+
+    <div id="recommendations" class="mt-4"></div>
 
   </div>
 `;
@@ -192,9 +207,9 @@ document.querySelector("#file-upload").addEventListener("change", (event) => {
   }
 });
 
-function renderWorkbook(workbook) {
+async function renderWorkbook(workbook) {
   const oldOutput = document.querySelector("#output");
-  oldOutput.insertAdjacentHTML('afterend', '<div id="output"></div>');
+  oldOutput.insertAdjacentHTML("afterend", '<div id="output"></div>');
   oldOutput.remove();
 
   const summarySheet = workbook.SheetNames.includes("Summary")
@@ -208,14 +223,20 @@ function renderWorkbook(workbook) {
 
   try {
     render(vaptReport({ Summary, ...data }), document.querySelector("#output"));
-    Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
+    Chart.register(Colors, BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
     new Chart(document.getElementById("bandwidth-usage"), {
       type: "bar",
       options: { animation: true, plugins: { tooltip: { enabled: true } } },
       data: {
         labels: data.Bandwidth.map((row) => row.Time),
-        datasets: [{ label: "Bandwidth Utilization", data: data.Bandwidth.map((row) => row["Bandwidth Utilization"]) }],
+        datasets: [
+          {
+            label: "Bandwidth Utilization",
+            backgroundColor: "rgba(25, 135, 84, 0.8)",
+            data: data.Bandwidth.map((row) => row["Bandwidth Utilization"]),
+          },
+        ],
       },
     });
     new Chart(document.getElementById("session-usage"), {
@@ -223,15 +244,58 @@ function renderWorkbook(workbook) {
       options: { animation: true, plugins: { tooltip: { enabled: true } } },
       data: {
         labels: data.Sessions.map((row) => row.Time),
-        datasets: [{ label: "Number of Sessions", data: data.Sessions.map((row) => row["Sessions"]) }],
+        datasets: [
+          {
+            label: "Number of Sessions",
+            backgroundColor: "rgba(25, 135, 84, 0.8)",
+            data: data.Sessions.map((row) => row["Sessions"]),
+          },
+        ],
       },
     });
 
+    llmContent = Object.entries(data)
+      .map(([name, rows]) => {
+        if (rows.length === 0) return "";
+        const headers = Object.keys(rows[0]).join("\t");
+        const values = rows.map((row) => Object.values(row).join("\t")).join("\n");
+        return `<DATA name="${name}">\n${headers}\n${values}\n</DATA>`;
+      })
+      .join("\n\n");
 
+    document.querySelector("#recommendations-form").dispatchEvent(new Event("submit", { bubbles: true }));
   } catch (error) {
     return notify(`Error rendering report: ${error.message}`);
   }
 }
+
+document.querySelector("body").addEventListener("submit", async (event) => {
+  if (event.target.id !== "recommendations-form") return;
+
+  event.preventDefault();
+  render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
+  let content = "";
+  for await (const event of asyncSSE("https://llmfoundry.straive.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}:reportgen` },
+    stream: true,
+    stream_options: { include_usage: true },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      stream: true,
+      messages: [
+        { role: "system", content: document.querySelector("#recommendations-prompt").value },
+        { role: "user", content: llmContent },
+      ],
+    }),
+  })) {
+    if (event.data == "[DONE]") break;
+    const message = JSON.parse(event.data);
+    const content_delta = message.choices?.[0]?.delta?.content;
+    if (content_delta) content += content_delta;
+    render(unsafeHTML(marked.parse(content)), document.querySelector("#recommendations"));
+  }
+});
 
 function notify(message) {
   render(html`<div class="alert alert-danger">${message}</div>`, document.querySelector("#output"));
