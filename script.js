@@ -4,30 +4,30 @@ import { Marked } from "https://cdn.jsdelivr.net/npm/marked@13/+esm";
 import { read, utils } from "https://cdn.jsdelivr.net/npm/xlsx/+esm";
 import { asyncSSE } from "https://cdn.jsdelivr.net/npm/asyncsse@1";
 
-let llmContent;
+let llmContent,content="";
 const marked = new Marked();
 const { token } = await fetch("https://llmfoundry.straive.com/token", { credentials: "include" }).then((r) => r.json());
 if (!token) {
   const url = "https://llmfoundry.straive.com/login?" + new URLSearchParams({ next: location.href });
   render(html`<a class="btn btn-primary" href="${url}">Log into LLM Foundry</a></p>`, document.querySelector("#login"));
 }
-
+const output=document.getElementById("output");
 const vaptReport = () => html`
   <div>
     <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
-
     <form id="recommendations-form">
-      <div class="mb-3">
-        <label for="recommendations-prompt" class="form-label">Prompt</label>
+    <div class="mb-3">
+    <label for="recommendations-prompt" class="form-label">Prompt</label>
         <input
           type="text"
           class="form-control"
           id="recommendations-prompt"
           placeholder="Enter a prompt to generate data quality report"
           value="Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor"
-        />
-      </div>
-      <button type="submit" class="btn btn-primary">Generate</button>
+          />
+          </div>
+          <button type="submit" class="btn btn-primary">Generate</button>
+          <button type="button" id="download-button" class="btn btn-primary d-none">Download Report</button>
     </form>
 
     <div id="recommendations" class="mt-4"></div>
@@ -90,7 +90,7 @@ document.querySelector("body").addEventListener("submit", async (event) => {
 
   event.preventDefault();
   render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
-  let content = "";
+  // let content = "";
   for await (const event of asyncSSE("https://llmfoundry.straive.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}:clinicalgen` },
@@ -113,8 +113,17 @@ document.querySelector("body").addEventListener("submit", async (event) => {
     // console.log(content);
   }
   console.log(content);
-  // convertMarkdownToPDF(content);
+  const recommendationsForm=document.querySelector("#recommendations-form");
+  recommendationsForm.querySelector("#download-button").classList.remove("d-none");
 });
+
+document.addEventListener("click", (e) => {
+  if (e.target.id === "download-button") {
+    console.log("Download button clicked");
+    convertMarkdownToPDF(content);  // Assuming this function generates the PDF
+  }
+});
+
 
 function convertMarkdownToPDF(markdownData) {
   // Convert Markdown to HTML
