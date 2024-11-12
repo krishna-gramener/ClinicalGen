@@ -113,8 +113,7 @@ document.querySelector("body").addEventListener("submit", async (event) => {
     // console.log(content);
   }
   console.log(content);
-  const recommendationsForm=document.querySelector("#recommendations-form");
-  recommendationsForm.querySelector("#download-button").classList.remove("d-none");
+  document.querySelector("#recommendations-form").querySelector("#download-button").classList.remove("d-none");
 });
 
 document.addEventListener("click", (e) => {
