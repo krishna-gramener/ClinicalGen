@@ -1,6 +1,9 @@
-# ReportGen
+# ClinicalGen
 
-ReportGen is an automated letter generation tool designed for compliance and regulatory environments. It streamlines the creation of compliance-related documents while ensuring accuracy and adherence to regulations.
+ClinicalGen aims to streamline the process of generating comprehensive data quality reports tailored for
+clinical data. By automating the evaluation of data integrity and presenting insights in a clear, actionable
+format, ClinicalGen empowers researchers and healthcare professionals to enhance data reliability and improve
+clinical outcomes.
 
 ## For Users
 
