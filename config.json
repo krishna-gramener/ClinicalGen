@@ -1,0 +1,16 @@
+{
+  "demos":[
+    {
+      "title":"Data Quality",
+      "description":"Generate a Data Quality report",
+      "src":"vapt.xlsx",
+      "prompt":"Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor."
+    },
+    {
+      "title":"Regulatory Report",
+      "description":"Generate a Regulatory Inspection Readiness Report ",
+      "src":"Interim.xlsx",
+      "prompt":"Generate a Regulatory Inspection Readiness Report for a pre-approval inspection of a New Drug Application (NDA) based on the provided data sheets for SOP Compliance, Training Records, Audit Logs, and CAPA Tracking. Summarize key compliance metrics, highlight critical gaps, and recommend actions to improve inspection readiness."
+    }
+  ]
+}

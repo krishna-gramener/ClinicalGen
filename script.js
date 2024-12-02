@@ -4,43 +4,81 @@ import { Marked } from "https://cdn.jsdelivr.net/npm/marked@13/+esm";
 import { read, utils } from "https://cdn.jsdelivr.net/npm/xlsx/+esm";
 import { asyncSSE } from "https://cdn.jsdelivr.net/npm/asyncsse@1";
 
-let llmContent,content="";
+let llmContent,
+  content = "";
+const demosDiv = document.getElementById("demos");
 const marked = new Marked();
 const { token } = await fetch("https://llmfoundry.straive.com/token", { credentials: "include" }).then((r) => r.json());
 if (!token) {
   const url = "https://llmfoundry.straive.com/login?" + new URLSearchParams({ next: location.href });
   render(html`<a class="btn btn-primary" href="${url}">Log into LLM Foundry</a></p>`, document.querySelector("#login"));
 }
-const output=document.getElementById("output");
-const vaptReport = () => html`
+
+//Fetch Demos
+let demosArray = [];
+let indexVal=-1;
+
+const fetchAndRenderDemos = async () => {
+  try {
+    const { demos } = await (await fetch("config.json")).json();
+    demosArray = demos;
+    // console.log(demosArray);
+    render(
+      demos.map(
+        (demo, index) => html`
+          <div class="col-lg-6">
+            <div class="demo card h-100 text-decoration-none" data-index="${index}">
+              <div class="card-body">
+                <h5 class="card-title">${demo.title}</h5>
+                <p class="card-text">${demo.description}</p>
+                <button class="btn btn-primary mb-3 generate" data-src="${demo.src}">
+                  <i class="bi bi-gear"></i> Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        `
+      ),
+      demosDiv
+    );
+  } catch (error) {
+    console.error("Error fetching config.json:", error);
+  }
+};
+
+const output = document.getElementById("output");
+const qualityReport = () => html`
   <div>
     <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
     <form id="recommendations-form">
-    <div class="mb-3">
-    <label for="recommendations-prompt" class="form-label">Prompt</label>
+      <div class="mb-3">
+        <label for="user-prompt" class="form-label">Prompt</label>
         <input
           type="text"
           class="form-control"
-          id="recommendations-prompt"
+          id="user-prompt"
           placeholder="Enter a prompt to generate data quality report"
-          value="Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor"
-          />
-          </div>
-          <button type="submit" class="btn btn-primary">Generate</button>
-          <button type="button" id="download-button" class="btn btn-primary d-none">Download Report</button>
+          value="${indexVal !== -1 ? demosArray[indexVal].prompt : 'Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor.'}"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">Generate</button>
+      <button type="button" id="download-button" class="btn btn-primary d-none">Download Report</button>
     </form>
 
     <div id="recommendations" class="mt-4"></div>
   </div>
 `;
 
+
 document.querySelector("#demos").addEventListener("click", async (event) => {
-  const $generate = event.target.closest(".generate");
-  if ($generate) {
+  const $demo = event.target.closest(".demo");
+  indexVal = $demo.getAttribute("data-index");
+  if ($demo) {
     event.preventDefault();
     let workbook;
+    // console.log(demosArray);
     try {
-      workbook = read(await fetch($generate.dataset.src).then((r) => r.arrayBuffer()), { cellDates: true });
+      workbook = read(await fetch(demosArray[indexVal].src).then((r) => r.arrayBuffer()), { cellDates: true });
     } catch (error) {
       return notify(`Error loading or parsing XLSX file: ${error.message}`);
     }
@@ -50,6 +88,7 @@ document.querySelector("#demos").addEventListener("click", async (event) => {
 
 document.querySelector("#file-upload").addEventListener("change", (event) => {
   const file = event.target.files[0];
+  indexVal=-1;
   if (file) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -67,9 +106,8 @@ async function renderWorkbook(workbook) {
   oldOutput.remove();
   const Sheets = workbook.SheetNames;
   const data = Object.fromEntries(Sheets.map((name) => [name, utils.sheet_to_json(workbook.Sheets[name])]));
-  console.log(data);
   try {
-    render(vaptReport(), document.querySelector("#output"));
+    render(qualityReport(), document.querySelector("#output"));
     llmContent = Object.entries(data)
       .map(([name, rows]) => {
         if (rows.length === 0) return "";
@@ -78,8 +116,6 @@ async function renderWorkbook(workbook) {
         return `<DATA name="${name}">\n${headers}\n${values}\n</DATA>`;
       })
       .join("\n\n");
-    console.log(llmContent);
-    // document.querySelector("#recommendations-form").dispatchEvent(new Event("submit", { bubbles: true }));
   } catch (error) {
     return notify(`Error rendering report: ${error.message}`);
   }
@@ -87,7 +123,7 @@ async function renderWorkbook(workbook) {
 
 document.querySelector("body").addEventListener("submit", async (event) => {
   if (event.target.id !== "recommendations-form") return;
-
+  content="";
   event.preventDefault();
   render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
   // let content = "";
@@ -100,7 +136,7 @@ document.querySelector("body").addEventListener("submit", async (event) => {
       model: "gpt-4o-mini",
       stream: true,
       messages: [
-        { role: "system", content: document.getElementById("recommendations-prompt").value },
+        { role: "system", content: document.getElementById("user-prompt").value },
         { role: "user", content: llmContent },
       ],
     }),
@@ -110,24 +146,19 @@ document.querySelector("body").addEventListener("submit", async (event) => {
     const content_delta = message.choices?.[0]?.delta?.content;
     if (content_delta) content += content_delta;
     render(unsafeHTML(marked.parse(content)), document.querySelector("#recommendations"));
-    // console.log(content);
   }
-  console.log(content);
   document.querySelector("#recommendations-form").querySelector("#download-button").classList.remove("d-none");
 });
 
 document.addEventListener("click", (e) => {
   if (e.target.id === "download-button") {
-    console.log("Download button clicked");
-    convertMarkdownToPDF(content);  // Assuming this function generates the PDF
+    convertMarkdownToPDF(content); // Assuming this function generates the PDF
   }
 });
-
 
 function convertMarkdownToPDF(markdownData) {
   // Convert Markdown to HTML
   const htmlContent = marked.parse(markdownData);
-  console.log(htmlContent);
   // Create a temporary element to hold the HTML content
   const element = document.createElement("div");
   element.innerHTML = htmlContent;
@@ -165,3 +196,5 @@ function convertMarkdownToPDF(markdownData) {
 function notify(message) {
   render(html`<div class="alert alert-danger">${message}</div>`, document.querySelector("#output"));
 }
+
+fetchAndRenderDemos();
