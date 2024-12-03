@@ -9,17 +9,17 @@ clinical outcomes.
 
 ### Overview
 
-ReportGen is hosted at [reportgen.straive.app](https://reportgen.straive.app). It offers:
+ClinicalGen is hosted at [clinicalgen.straive.app](https://clinicalgen.straive.app). It offers:
 
-1. **VAPT Test Report Generation**: Generate a Vulnerability Assessment and Penetration Testing (VAPT) report from pre-loaded data.
-2. **Custom Report Generation**: Upload your own VAPT Excel report for analysis.
+1. **Data Quality Report/Regulatory Report Generation**: Generate a Data Quality report/Regulatory report from pre-loaded data.
+2. **Custom Report Generation**: Upload your own Excel report for analysis.
 
 ### How to Use
 
-1. Visit [reportgen.straive.app](https://reportgen.straive.app)
+1. Visit [clinicalgen.straive.app](https://clinicalgen.straive.app)
 2. Log in to LLM Foundry if prompted
 3. Choose one of the following options:
-   - Click "Generate" under "VAPT test" to use pre-loaded data
+   - Click "Generate" under "Data Quality Report" or "Regulatory Report" to use pre-loaded data
    - Click "Upload your Excel file here" under "Custom Report" to use your own data
 4. View the generated report, including:
    - Executive Summary
@@ -50,7 +50,7 @@ To add a new demo:
 2. Create a new Excel file (e.g., `new-demo.xlsx`) with the required data structure:
    - Include a "Summary" sheet with key-value pairs
    - Add additional sheets for specific data sections
-3. Update the `vaptReport` function in `script.js` to handle the new data structure if needed
+3. Update the `qualityReport` function in `script.js` to handle the new data structure if needed
 4. Modify the chart generation code if the new demo requires different visualizations
 
 ### Technologies Used
@@ -75,6 +75,6 @@ The project uses the LLM Foundry API for generating recommendations. Ensure you 
 
 ### Customization
 
-- Modify the `vaptReport` function in `script.js` to change the report structure
+- Modify the `qualityReport` function in `script.js` to change the report structure
 - Update styles in `index.html` to customize the appearance
 - Adjust chart configurations in `script.js` for different visualizations

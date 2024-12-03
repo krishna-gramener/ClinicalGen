@@ -22,7 +22,6 @@ const fetchAndRenderDemos = async () => {
   try {
     const { demos } = await (await fetch("config.json")).json();
     demosArray = demos;
-    // console.log(demosArray);
     render(
       demos.map(
         (demo, index) => html`
@@ -46,9 +45,8 @@ const fetchAndRenderDemos = async () => {
   }
 };
 
-const output = document.getElementById("output");
 const qualityReport = () => html`
-  <div>
+  <div class="mx-auto w-50">
     <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
     <form id="recommendations-form">
       <div class="mb-3">
@@ -76,7 +74,6 @@ document.querySelector("#demos").addEventListener("click", async (event) => {
   if ($demo) {
     event.preventDefault();
     let workbook;
-    // console.log(demosArray);
     try {
       workbook = read(await fetch(demosArray[indexVal].src).then((r) => r.arrayBuffer()), { cellDates: true });
     } catch (error) {
