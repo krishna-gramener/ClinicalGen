@@ -23,8 +23,7 @@ ClinicalGen is hosted at [clinicalgen.straive.app](https://clinicalgen.straive.a
    - Click "Upload your Excel file here" under "Custom Report" to use your own data
 4. View the generated report, including:
    - Executive Summary
-   - Security and Threat Prevention analysis
-   - Network Utilization charts
+   - Analysis of data quality
    - AI-generated recommendations
 
 ### Features

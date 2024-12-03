@@ -16,7 +16,7 @@ if (!token) {
 
 //Fetch Demos
 let demosArray = [];
-let indexVal=-1;
+let indexVal = -1;
 
 const fetchAndRenderDemos = async () => {
   try {
@@ -56,7 +56,9 @@ const qualityReport = () => html`
           class="form-control"
           id="user-prompt"
           placeholder="Enter a prompt to generate data quality report"
-          value="${indexVal !== -1 ? demosArray[indexVal].prompt : 'Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor.'}"
+          value="${indexVal !== -1
+            ? demosArray[indexVal].prompt
+            : "Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor."}"
         />
       </div>
       <button type="submit" class="btn btn-primary">Generate</button>
@@ -66,7 +68,6 @@ const qualityReport = () => html`
     <div id="recommendations" class="mt-4"></div>
   </div>
 `;
-
 
 document.querySelector("#demos").addEventListener("click", async (event) => {
   const $demo = event.target.closest(".demo");
@@ -85,7 +86,7 @@ document.querySelector("#demos").addEventListener("click", async (event) => {
 
 document.querySelector("#file-upload").addEventListener("change", (event) => {
   const file = event.target.files[0];
-  indexVal=-1;
+  indexVal = -1;
   if (file) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -120,7 +121,7 @@ async function renderWorkbook(workbook) {
 
 document.querySelector("body").addEventListener("submit", async (event) => {
   if (event.target.id !== "recommendations-form") return;
-  content="";
+  content = "";
   event.preventDefault();
   render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
   // let content = "";
