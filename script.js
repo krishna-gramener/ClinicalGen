@@ -6,6 +6,8 @@ import { asyncSSE } from "https://cdn.jsdelivr.net/npm/asyncsse@1";
 
 let llmContent,
   content = "";
+
+let instructions = "";
 const demosDiv = document.getElementById("demos");
 const marked = new Marked();
 const { token } = await fetch("https://llmfoundry.straive.com/token", { credentials: "include" }).then((r) => r.json());
@@ -50,15 +52,13 @@ const qualityReport = () => html`
     <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
     <form id="recommendations-form">
       <div class="mb-3">
-        <label for="user-prompt" class="form-label">Prompt</label>
+        <label for="user-prompt" class="form-label">Instructions</label>
         <input
           type="text"
           class="form-control"
           id="user-prompt"
-          placeholder="Enter a prompt to generate data quality report"
-          value="${indexVal !== -1
-            ? demosArray[indexVal].prompt
-            : "Using provided data,generate a detailed Data Quality Report and final conclusion on quality of data and categorize it as high,good,average and poor."}"
+          placeholder="Optional : Enter Instructions or Leave blank and submit"
+          value=""
         />
       </div>
       <button type="submit" class="btn btn-primary">Generate</button>
@@ -69,13 +69,59 @@ const qualityReport = () => html`
   </div>
 `;
 
+const sampleUploadBox = () => html`
+  <div class="mx-auto w-50">
+    <div class="row">
+      <div class="col-lg-6 py-5">
+        <div class="demo card ">
+          <label class="card-body">
+            <h5 class="card-title">Sample Report</h5>
+            <p class="card-text">
+Leverage pre-existing data to produce the report.</p>
+            <div class="d-flex justify-content-between align-items-center">
+            <button id="sample-button" type="submit" class="btn btn-primary"><i class="bi bi-gear"></i> Generate</button>
+            </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 py-5">
+        <div class="demo card ">
+          <label class="card-body">
+            <h5 class="card-title">Custom Report</h5>
+            <p class="card-text">Use your own Excel File to generate report.</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <label for="file-upload" class="btn btn-primary flex-fill me-2">
+                <i class="bi bi-cloud-upload"></i> Upload your Excel file
+              </label>
+            </div>
+            <input id="file-upload" type="file" accept=".xlsx" class="d-none">
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
 document.querySelector("#demos").addEventListener("click", async (event) => {
   const $demo = event.target.closest(".demo");
   indexVal = $demo.getAttribute("data-index");
   if ($demo) {
+    instructions = demosArray[indexVal].prompt;
+    event.preventDefault();
+    try {
+      render(sampleUploadBox(), document.getElementById("sample-upload"));
+    } catch (error) {
+      return notify(`Error Rendering Sample Upload Box: ${error.message}`);
+    }
+  }
+});
+
+document.querySelector("#sample-upload").addEventListener("click", async (event) => {
+  const $sampleButton = event.target.closest("#sample-button");
+  if ($sampleButton) {
     event.preventDefault();
     let workbook;
     try {
+      render(sampleUploadBox(), document.getElementById("sample-upload"));
       workbook = read(await fetch(demosArray[indexVal].src).then((r) => r.arrayBuffer()), { cellDates: true });
     } catch (error) {
       return notify(`Error loading or parsing XLSX file: ${error.message}`);
@@ -84,18 +130,21 @@ document.querySelector("#demos").addEventListener("click", async (event) => {
   }
 });
 
-document.querySelector("#file-upload").addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  indexVal = -1;
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const workbook = read(event.target.result, { cellDates: true });
-      renderWorkbook(workbook);
-    };
-    reader.readAsArrayBuffer(file);
+document.querySelector("#sample-upload").addEventListener("change", async (event) => {
+  const $uploadFileInput = event.target; // This should be the <input type="file"> element.
+  if ($uploadFileInput && $uploadFileInput.files.length > 0) {
+    const file = $uploadFileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const workbook = XLSX.read(event.target.result, { cellDates: true });
+        renderWorkbook(workbook); // Your custom function to handle the workbook
+      };
+      reader.readAsArrayBuffer(file);
+    }
   }
 });
+
 
 //This is the function which processes data from excel sheet
 async function renderWorkbook(workbook) {
@@ -121,6 +170,10 @@ async function renderWorkbook(workbook) {
 
 document.querySelector("body").addEventListener("submit", async (event) => {
   if (event.target.id !== "recommendations-form") return;
+  let finalInstructions = instructions;
+  if (document.getElementById("user-prompt").value.length > 0) {
+    finalInstructions = instructions + "\n" + document.getElementById("user-prompt").value;
+  }
   content = "";
   event.preventDefault();
   render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
@@ -134,7 +187,7 @@ document.querySelector("body").addEventListener("submit", async (event) => {
       model: "gpt-4o-mini",
       stream: true,
       messages: [
-        { role: "system", content: document.getElementById("user-prompt").value },
+        { role: "system", content: finalInstructions },
         { role: "user", content: llmContent },
       ],
     }),
