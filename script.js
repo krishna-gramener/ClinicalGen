@@ -70,22 +70,23 @@ const qualityReport = () => html`
 `;
 
 const sampleUploadBox = () => html`
-  <div class="mx-auto w-50">
+  <div class="mx-auto w-75">
     <div class="row">
-      <div class="col-lg-6 py-5">
-        <div class="demo card ">
+      <div class="col-lg-6 py-2">
+        <div class="demo card">
           <label class="card-body">
             <h5 class="card-title">Sample Report</h5>
             <p class="card-text">
 Leverage pre-existing data to produce the report.</p>
-            <div class="d-flex justify-content-between align-items-center">
-            <button id="sample-button" type="submit" class="btn btn-primary"><i class="bi bi-gear"></i> Generate</button>
+            <div class="d-flex align-items-center">
+            <button id="sample-button" type="submit" class="btn btn-primary mx-2"><i class="bi bi-gear"></i> Generate</button>
+            <a class="btn btn-primary" href="${demosArray[indexVal].src}"><i class="bi bi-download"></i> Download XLSX</a>
             </div>
         </div>
       </div>
 
-      <div class="col-lg-6 py-5">
-        <div class="demo card ">
+      <div class="col-lg-6 py-2">
+        <div class="demo card">
           <label class="card-body">
             <h5 class="card-title">Custom Report</h5>
             <p class="card-text">Use your own Excel File to generate report.</p>
