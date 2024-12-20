@@ -13,22 +13,28 @@
     .narrative {
       max-width: 40rem;
     }
+
     /* Handle markdown output */
     #recommendations li p {
       margin-bottom: 0;
     }
 
     @media print {
-  /* Hide unnecessary elements during printing */
-  #nav-bar,#login,#container,#footer,#recommendations-form{
-    display: none;
-  }
 
-  /* Ensure the main content is fully visible */
-  #recommendations {
-    width: 100%;
-  }
-}
+      /* Hide unnecessary elements during printing */
+      #nav-bar,
+      #login,
+      #container,
+      #footer,
+      #recommendations-form {
+        display: none;
+      }
+
+      /* Ensure the main content is fully visible */
+      #recommendations {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 
@@ -58,6 +64,7 @@
       </div>
     </div>
   </nav>
+  <div id="login" class="my-5 d-flex align-items-center justify-content-center"></div>
 
   <div id="container" class="container">
     <h1 class="display-1 my-4 text-center">ClinicalGen</h1>
@@ -73,19 +80,21 @@
       </p>
     </div>
 
-    <div class="row mx-auto px-4">
-      <div id="demos" class="col row row-cols-1 row-cols-sm-2 row-cols-lg-3 my-5"></div>
+    <div id="card-box">
+      <div class="row mx-auto px-4">
+        <div id="demos" class="col row row-cols-1 row-cols-sm-2 row-cols-lg-3 my-5"></div>
+      </div>
+      <div class="row mx-auto px-4">
+        <div id="sample-upload" class="col row row-cols-1 row-cols-sm-2 row-cols-lg-3 my-5"></div>
+      </div>
     </div>
-    <div class="row mx-auto px-4">
-      <div id="sample-upload" class="col row row-cols-1 row-cols-sm-2 row-cols-lg-3 my-5"></div>
-    </div>
+
   </div>
-  <div id="login" class="my-5 d-flex align-items-center justify-content-center"></div>
   <div id="output"></div>
   </div>
 
 
-  <footer  class="my-5 vh-100 d-flex align-items-center justify-content-center">
+  <footer class="my-5 vh-100 d-flex align-items-center justify-content-center">
     <h1 id="footer" class="display-4">Designed by <a href="https://gramener.com/"
         class="text-reset link-offset-3 link-underline link-underline-opacity-25">Gramener</a></h1>
   </footer>

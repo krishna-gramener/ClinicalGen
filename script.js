@@ -13,6 +13,7 @@ const marked = new Marked();
 const { token } = await fetch("https://llmfoundry.straive.com/token", { credentials: "include" }).then((r) => r.json());
 if (!token) {
   const url = "https://llmfoundry.straive.com/login?" + new URLSearchParams({ next: location.href });
+  document.getElementById("card-box").classList.add("d-none");
   render(html`<a class="btn btn-primary" href="${url}">Log into LLM Foundry</a></p>`, document.querySelector("#login"));
 }
 
