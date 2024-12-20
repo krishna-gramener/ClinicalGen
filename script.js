@@ -102,7 +102,7 @@ Leverage pre-existing data to produce the report.</p>
   </div>
 `;
 
-document.querySelector("#demos").addEventListener("click", async (event) => {
+document.querySelector("#demos").addEventListener("click", (event) => {
   const $demo = event.target.closest(".demo");
   indexVal = $demo.getAttribute("data-index");
   if ($demo) {
