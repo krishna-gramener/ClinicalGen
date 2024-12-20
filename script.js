@@ -146,7 +146,6 @@ document.querySelector("#sample-upload").addEventListener("change", async (event
   }
 });
 
-
 //This is the function which processes data from excel sheet
 async function renderWorkbook(workbook) {
   const oldOutput = document.querySelector("#output");
@@ -178,7 +177,6 @@ document.querySelector("body").addEventListener("submit", async (event) => {
   content = "";
   event.preventDefault();
   render(html`<div class="spinner-border"></div>`, document.querySelector("#recommendations"));
-  // let content = "";
   for await (const event of asyncSSE("https://llmfoundry.straive.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}:clinicalgen` },
