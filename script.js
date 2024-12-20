@@ -131,7 +131,7 @@ document.querySelector("#sample-upload").addEventListener("click", async (event)
   }
 });
 
-document.querySelector("#sample-upload").addEventListener("change", async (event) => {
+document.querySelector("#sample-upload").addEventListener("change", (event) => {
   const $uploadFileInput = event.target; // This should be the <input type="file"> element.
   if ($uploadFileInput && $uploadFileInput.files.length > 0) {
     const file = $uploadFileInput.files[0];
