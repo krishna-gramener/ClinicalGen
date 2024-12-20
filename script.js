@@ -49,8 +49,8 @@ const fetchAndRenderDemos = async () => {
 
 const qualityReport = () => html`
   <div class="mx-auto w-50">
-    <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
-    <form id="recommendations-form">
+  <form id="recommendations-form">
+  <h1 class="display-4 my-4 border-bottom border-dark pb-2">Generated Report</h1>
       <div class="mb-3">
         <label for="user-prompt" class="form-label">Instructions</label>
         <input
@@ -202,46 +202,8 @@ document.querySelector("body").addEventListener("submit", async (event) => {
 
 document.addEventListener("click", (e) => {
   if (e.target.id === "download-button") {
-    convertMarkdownToPDF(content); // Assuming this function generates the PDF
-  }
+    window.print();  }
 });
-
-function convertMarkdownToPDF(markdownData) {
-  // Convert Markdown to HTML
-  const htmlContent = marked.parse(markdownData);
-  // Create a temporary element to hold the HTML content
-  const element = document.createElement("div");
-  element.innerHTML = htmlContent;
-  element.style.color = "black"; // Set font color to black            // Ensure no additional margins
-  element.style.fontSize = "12px";
-  element.style.margin = "0"; // Remove external margins
-  element.style.padding = "0"; // Remove internal padding
-  element.style.width = "210mm"; // Full width for an A4 page width in mm
-
-  // Generate PDF with specified settings
-  html2pdf()
-    .from(element)
-    .set({
-      filename: "data-quality-report.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      margin: [5, 5, 5, 5], // Set small margins for the PDF content (top, right, bottom, left)
-      html2canvas: { scale: 2, scrollY: 0 }, // `scrollY: 0` prevents issues with large content
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    })
-    .save()
-    .then(() => {
-      // Clean up: Remove the temporary element after PDF generation
-      document.body.removeChild(element);
-    })
-    .catch((err) => {
-      console.error("Error generating PDF:", err);
-      // Clean up the temporary element if there's an error
-      document.body.removeChild(element);
-    });
-
-  // Temporarily append the element to avoid display issues
-  document.body.appendChild(element);
-}
 
 function notify(message) {
   render(html`<div class="alert alert-danger">${message}</div>`, document.querySelector("#output"));
